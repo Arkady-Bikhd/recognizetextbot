@@ -4,6 +4,7 @@ from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from os import environ
 from dotenv import load_dotenv
+from google.cloud import dialogflow
 
 
 logging.basicConfig(
@@ -28,13 +29,27 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 
 def echo(update: Update, context: CallbackContext) -> None:
-    """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    df_project_id = environ['GOOGLE_CLOUD_PROJECT']
+    session_id = environ['TG_CHAT_ID']
+    bot_answer = detect_intent_texts(df_project_id, session_id, text=update.message.text)
+    update.message.reply_text(bot_answer)
+
+
+def detect_intent_texts(project_id, session_id, text, language_code = 'ru-RU'):
+    
+    session_client = dialogflow.SessionsClient()
+    session = session_client.session_path(project_id, session_id)
+    text_input = dialogflow.TextInput(text=text, language_code=language_code)
+    query_input = dialogflow.QueryInput(text=text_input)
+    response = session_client.detect_intent(
+        request={"session": session, "query_input": query_input}
+    )    
+    return response.query_result.fulfillment_text
 
 
 def main() -> None:
     load_dotenv()
-    tg_bot_token = environ['TG_BOT_TOKEN']
+    tg_bot_token = environ['TG_BOT_TOKEN']    
     updater = Updater(tg_bot_token)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
