@@ -14,8 +14,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def start(update: Update, context: CallbackContext) -> None:
-    
+def start(update: Update, context: CallbackContext) -> None:     
+    context.user_data['df_project_id'] = environ['GOOGLE_CLOUD_PROJECT']
+    context.user_data['session_id'] = environ['GOOGLE_CLOUD_PROJECT']
     user = update.effective_user
     update.message.reply_markdown_v2(
         fr'Здравствуйте, {user.mention_markdown_v2()}\!',
@@ -24,18 +25,17 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
+    
     update.message.reply_text('Help!')
 
 
-def echo(update: Update, context: CallbackContext) -> None:
-    df_project_id = environ['GOOGLE_CLOUD_PROJECT']
-    session_id = environ['TG_CHAT_ID']
-    bot_answer = detect_intent_texts(df_project_id, session_id, text=update.message.text)
+def send_reply(update: Update, context: CallbackContext) -> None:
+    
+    bot_answer = detect_intent_texts(context.user_data['df_project_id'], context.user_data['session_id'], text=update.message.text)
     update.message.reply_text(bot_answer)
 
 
-def detect_intent_texts(project_id, session_id, text, language_code = 'ru-RU'):
+def detect_intent_texts(project_id, session_id, text, language_code='ru-RU'):
     
     session_client = dialogflow.SessionsClient()
     session = session_client.session_path(project_id, session_id)
@@ -49,12 +49,12 @@ def detect_intent_texts(project_id, session_id, text, language_code = 'ru-RU'):
 
 def main() -> None:
     load_dotenv()
-    tg_bot_token = environ['TG_BOT_TOKEN']    
+    tg_bot_token = environ['TG_BOT_TOKEN']       
     updater = Updater(tg_bot_token)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, send_reply))
     updater.start_polling()
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
