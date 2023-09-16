@@ -10,7 +10,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 from recognize_text_bot import detect_intent_texts
 
 
-def send_replay(event, vk_api, bot_answer):    
+def send_answer(event, vk_api, bot_answer):    
     vk_api.messages.send(
         user_id=event.user_id,
         message=bot_answer,
@@ -28,8 +28,9 @@ def main():
     longpoll = VkLongPoll(vk_session)
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            bot_answer = detect_intent_texts(df_project_id, session_id, event.text)            
-            send_replay(event, vk_api, bot_answer)
+            bot_answer = detect_intent_texts(df_project_id, session_id, event.text, bot='vk')
+            if bot_answer:            
+                send_answer(event, vk_api, bot_answer)
 
 
 if __name__ == '__main__':

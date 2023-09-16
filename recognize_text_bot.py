@@ -29,13 +29,13 @@ def help_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Help!')
 
 
-def send_reply(update: Update, context: CallbackContext) -> None:
+def send_answer(update: Update, context: CallbackContext) -> None:
     
     bot_answer = detect_intent_texts(context.user_data['df_project_id'], context.user_data['session_id'], text=update.message.text)
     update.message.reply_text(bot_answer)
 
 
-def detect_intent_texts(project_id, session_id, text, language_code='ru-RU'):
+def detect_intent_texts(project_id, session_id, text, bot='tg', language_code='ru-RU'):
     
     session_client = dialogflow.SessionsClient()
     session = session_client.session_path(project_id, session_id)
@@ -43,8 +43,11 @@ def detect_intent_texts(project_id, session_id, text, language_code='ru-RU'):
     query_input = dialogflow.QueryInput(text=text_input)
     response = session_client.detect_intent(
         request={"session": session, "query_input": query_input}
-    )    
-    return response.query_result.fulfillment_text
+    ) 
+    if response.query_result.intent.is_fallback and bot == 'vk':
+        return None
+    else:   
+        return response.query_result.fulfillment_text
 
 
 def main() -> None:
@@ -54,7 +57,7 @@ def main() -> None:
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, send_reply))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, send_answer))
     updater.start_polling()
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
