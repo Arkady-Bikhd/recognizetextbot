@@ -1,4 +1,5 @@
 import logging
+import telegram
 
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
@@ -7,11 +8,23 @@ from dotenv import load_dotenv
 from google.cloud import dialogflow
 
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
+# logging.basicConfig(
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+# )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('speech_bot')
+
+
+class TelegramLogsHandler(logging.Handler):
+
+    def __init__(self, tg_bot, chat_id):
+        super().__init__()
+        self.chat_id = chat_id
+        self.tg_bot = tg_bot
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
 def start(update: Update, context: CallbackContext) -> None:     
@@ -48,21 +61,32 @@ def detect_intent_texts(project_id, session_id, text, bot='tg', language_code='r
         return None
     else:   
         return response.query_result.fulfillment_text
+    
+    
+def send_error(update: Update, context: CallbackContext) -> None:
+    logger.error('Случилась ошибка')
 
 
 def main() -> None:
     load_dotenv()
-    tg_bot_token = environ['TG_BOT_TOKEN']       
+    tg_bot_token = environ['TG_BOT_TOKEN'] 
+    notice_bot_token = environ['TG_NOTICE_BOT_TOKEN']
+    tg_chat_id = environ['TG_CHAT_ID']
+    notice_bot = telegram.Bot(notice_bot_token)
+    logger.setLevel(logging.WARNING)       
+    logger.addHandler(
+        TelegramLogsHandler(
+            tg_bot=notice_bot,
+            chat_id=tg_chat_id,
+        )
+    )          
     updater = Updater(tg_bot_token)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, send_answer))
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
+    dispatcher.add_error_handler(send_error)
+    updater.start_polling()    
     updater.idle()
 
 
