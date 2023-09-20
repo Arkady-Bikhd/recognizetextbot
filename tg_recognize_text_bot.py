@@ -5,22 +5,10 @@ from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from os import environ
 from dotenv import load_dotenv
-from google.cloud import dialogflow
+from recognize_text_api import TelegramLogsHandler, detect_intent_texts
 
 
 logger = logging.getLogger('speech_bot')
-
-
-class TelegramLogsHandler(logging.Handler):
-
-    def __init__(self, tg_bot, chat_id):
-        super().__init__()
-        self.chat_id = chat_id
-        self.tg_bot = tg_bot
-
-    def emit(self, record):
-        log_entry = self.format(record)
-        self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
 def start(update: Update, context: CallbackContext) -> None:     
@@ -42,21 +30,6 @@ def send_answer(update: Update, context: CallbackContext) -> None:
     
     bot_answer = detect_intent_texts(context.user_data['df_project_id'], context.user_data['session_id'], text=update.message.text)
     update.message.reply_text(bot_answer)
-
-
-def detect_intent_texts(project_id, session_id, text, bot='tg', language_code='ru-RU'):
-    
-    session_client = dialogflow.SessionsClient()
-    session = session_client.session_path(project_id, session_id)
-    text_input = dialogflow.TextInput(text=text, language_code=language_code)
-    query_input = dialogflow.QueryInput(text=text_input)
-    response = session_client.detect_intent(
-        request={"session": session, "query_input": query_input}
-    ) 
-    if response.query_result.intent.is_fallback and bot == 'vk':
-        return None
-    else:   
-        return response.query_result.fulfillment_text
     
     
 def send_error(update: Update, context: CallbackContext) -> None:
