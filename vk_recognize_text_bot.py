@@ -25,8 +25,7 @@ def send_answer(event, vk_api, bot_answer):
 def main():
     load_dotenv()
     vk_access_token = environ['VK_ACCESS_TOKEN']
-    df_project_id = environ['GOOGLE_CLOUD_PROJECT']
-    session_id = environ['VK_GROUP_ID']
+    df_project_id = environ['GOOGLE_CLOUD_PROJECT']    
     vk_session = vk.VkApi(token=vk_access_token)
     vk_api = vk_session.get_api()
     longpoll = VkLongPoll(vk_session)
@@ -43,7 +42,7 @@ def main():
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             try:
-                bot_answer = detect_intent_texts(df_project_id, session_id, event.text, bot='vk')
+                bot_answer = detect_intent_texts(df_project_id, f'vk-{event.user_id}', event.text, bot='vk')
                 if bot_answer:            
                     send_answer(event, vk_api, bot_answer)
                 else:
