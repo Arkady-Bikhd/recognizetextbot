@@ -1,8 +1,4 @@
-
 from google.cloud import dialogflow
-
-
-
 
 
 def detect_intent_texts(project_id, session_id, text, language_code='ru-RU'):
