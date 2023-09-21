@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 import vk_api as vk
 
 from vk_api.longpoll import VkLongPoll, VkEventType
-from recognize_text_api import TelegramLogsHandler, detect_intent_texts
+from recognize_text_api import detect_intent_texts
+from logging_api import TelegramLogsHandler
 
 
 logger = logging.getLogger('speech_bot')

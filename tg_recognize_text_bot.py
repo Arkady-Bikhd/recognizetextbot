@@ -8,7 +8,8 @@ from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from os import environ
 from dotenv import load_dotenv
-from recognize_text_api import TelegramLogsHandler, detect_intent_texts
+from recognize_text_api import detect_intent_texts
+from logging_api import TelegramLogsHandler
 
 
 logger = logging.getLogger('speech_bot')
