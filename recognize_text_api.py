@@ -14,7 +14,7 @@ class TelegramLogsHandler(logging.Handler):
         self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
-def detect_intent_texts(project_id, session_id, text, bot='tg', language_code='ru-RU'):
+def detect_intent_texts(project_id, session_id, text, language_code='ru-RU'):
     
     session_client = dialogflow.SessionsClient()
     session = session_client.session_path(project_id, session_id)
@@ -23,7 +23,8 @@ def detect_intent_texts(project_id, session_id, text, bot='tg', language_code='r
     response = session_client.detect_intent(
         request={"session": session, "query_input": query_input}
     ) 
-    if response.query_result.intent.is_fallback and bot == 'vk':
-        return None
-    else:   
-        return response.query_result.fulfillment_text
+    return response
+# .query_result.intent.is_fallback and bot == 'vk':
+#         return None
+#     else:   
+#         return response.query_result.fulfillment_text

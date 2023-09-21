@@ -42,9 +42,9 @@ def main():
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             try:
-                bot_answer = detect_intent_texts(df_project_id, f'vk-{event.user_id}', event.text, bot='vk')
-                if bot_answer:            
-                    send_answer(event, vk_api, bot_answer)
+                bot_answer = detect_intent_texts(df_project_id, f'vk-{event.user_id}', event.text)
+                if not bot_answer.query_result.intent.is_fallback:            
+                    send_answer(event, vk_api, bot_answer.query_result.fulfillment_text)
                 else:
                     logger.warning('Бот не знает ответ')
             except Exception as err:

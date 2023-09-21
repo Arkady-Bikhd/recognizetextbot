@@ -24,7 +24,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def send_answer(update: Update, context: CallbackContext, df_project_id) -> None:
     bot_answer = detect_intent_texts(df_project_id, f'vk-{update.message.chat_id}', text=update.message.text)
-    update.message.reply_text(bot_answer)
+    update.message.reply_text(bot_answer.query_result.fulfillment_text)
     
     
 def send_error(update: Update, context: CallbackContext) -> None:
